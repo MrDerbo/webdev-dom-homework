@@ -8,8 +8,8 @@
 
   <body>
     <div class="container">
-      <ul class="comments">
-        <li class="comment">
+      <ul class="comments" id="listAdd">
+        <li class="comment" id="backgroundID">
           <div class="comment-header">
             <div>Глеб Фокин</div>
             <div>12.02.22 12:18</div>
@@ -26,7 +26,7 @@
             </div>
           </div>
         </li>
-        <li class="comment">
+        <li class="comment" id="backgroundID">
           <div class="comment-header">
             <div>Варвара Н.</div>
             <div>13.02.22 19:22</div>
@@ -39,7 +39,7 @@
           <div class="comment-footer">
             <div class="likes">
               <span class="likes-counter">75</span>
-              <button class="like-button -active-like"></button>
+              <button class="like-button -active-like" id="buttonAddLike"></button>
             </div>
           </div>
         </li>
@@ -49,23 +49,71 @@
           type="text"
           class="add-form-name"
           placeholder="Введите ваше имя"
+          id="nameInput"
         />
         <textarea
           type="textarea"
           class="add-form-text"
           placeholder="Введите ваш коментарий"
           rows="4"
+          id="textTextarea"
         ></textarea>
         <div class="add-form-row">
-          <button class="add-form-button">Написать</button>
+          <button class="add-form-button" id="buttonAddForm">Написать</button>
         </div>
       </div>
     </div>
   </body>
 
   <script>
-    "use strict";
+    const forButtonAddForm = document.getElementById('buttonAddForm');
+    const forNameInput = document.getElementById('nameInput');
+    const forTextArea = document.getElementById('textTextarea');
+    const listAdd = document.getElementById('listAdd');
+
+    const forLikeButton = document.getElementById('buttonAddLike');
     
-    console.log("It works!");
+    function getFullDateForComment() {
+      let now = new Date();
+      
+      let yearValue = now.getFullYear();
+      let monthValue = now.getMonth() + 1;
+      let dayValue = now.getDate();
+      let hoursValue = now.getHours();
+      let minutesValue = now.getMinutes();
+
+      return dayValue + '.' + monthValue + '.' + yearValue + ' ' + hoursValue + ':' + minutesValue;
+    }
+
+    function getLikesForComment() {
+      
+    }
+
+    forButtonAddForm.addEventListener('click', () => {
+      const oldMessages = listAdd.innerHTML;
+      const nameValue = forNameInput.value;
+      const textareaValue = forTextArea.value;
+
+      const newMessage = 
+      `<li class="comment" id="backgroundID">
+          <div class="comment-header">
+            <div>${nameValue}</div>
+            <div>${getFullDateForComment()}</div>
+          </div>
+          <div class="comment-body">
+            <div class="comment-text">
+              ${textareaValue}
+            </div>
+          </div>
+          <div class="comment-footer">
+            <div class="likes">
+              <span class="likes-counter">75</span>
+              <button class="like-button -active-like"></button>
+            </div>
+          </div>
+        </li>`;
+
+      listAdd.innerHTML = oldMessages + newMessage;
+    })
   </script>
 </html>
