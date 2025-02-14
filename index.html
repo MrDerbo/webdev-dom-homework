@@ -90,6 +90,15 @@
       const nameValue = forNameInput.value;
       const textareaValue = forTextArea.value;
 
+      forNameInput.classList.remove('error');
+      forTextArea.classList.remove('error');
+
+      if (nameValue === '' || textareaValue === '') {
+        forNameInput.classList.add('error');
+        forTextArea.classList.add('error');
+        return;
+      }
+
       const newMessage = 
       `<li class="comment" id="backgroundID">
           <div class="comment-header">

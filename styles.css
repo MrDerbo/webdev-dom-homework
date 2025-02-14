@@ -135,3 +135,7 @@ body {
   .add-form-button:hover {
     opacity: 0.9;
   }
+
+  .error {
+    background: #8B0000;
+  }
