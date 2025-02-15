@@ -74,13 +74,13 @@
     const forLikeButton = document.getElementById('buttonAddLike');
     
     function getFullDateForComment() {
-      let now = new Date();
+      const now = new Date();
       
-      let yearValue = now.getFullYear();
-      let monthValue = now.getMonth() + 1;
-      let dayValue = now.getDate();
-      let hoursValue = now.getHours();
-      let minutesValue = now.getMinutes();
+      const yearValue = now.getFullYear();
+      const monthValue = now.getMonth() + 1;
+      const dayValue = now.getDate();
+      const hoursValue = now.getHours();
+      const minutesValue = now.getMinutes();
 
       return dayValue + '.' + monthValue + '.' + yearValue.toString().slice(-2) + ' ' + hoursValue + ':' + minutesValue;
     }
@@ -113,7 +113,7 @@
           <div class="comment-footer">
             <div class="likes">
               <span class="likes-counter">0</span>
-              <button class="like-button -active-like"></button>
+              <button class="like-button"></button>
             </div>
           </div>
         </li>`;
