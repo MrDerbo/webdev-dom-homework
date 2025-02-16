@@ -81,7 +81,7 @@
 
     renderCommentators();
 
-    const initEventListeners = () => {
+    const initEventListeners = () => { // часть с лайком
       const likeElements = document.querySelectorAll('.like-button');
       const isLike = document.querySelectorAll('-active-like');
 
@@ -103,7 +103,6 @@
       const hoursValue = now.getHours();
       const minutesValue = now.getMinutes();
 
-      // return dayValue + '.' + monthValue + '.' + yearValue.toString().slice(-2) + ' ' + hoursValue + ':' + minutesValue;
       return `${dayValue}.${monthValue}.${yearValue} ${hoursValue}:${minutesValue}`
     }
 
