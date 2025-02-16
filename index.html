@@ -9,40 +9,7 @@
   <body>
     <div class="container">
       <ul class="comments" id="listAdd">
-        <li class="comment" id="backgroundID">
-          <div class="comment-header">
-            <div>Глеб Фокин</div>
-            <div>12.02.22 12:18</div>
-          </div>
-          <div class="comment-body">
-            <div class="comment-text">
-              Это будет первый комментарий на этой странице 
-            </div>
-          </div>
-          <div class="comment-footer">
-            <div class="likes">
-              <span class="likes-counter">3</span>
-              <button class="like-button"></button>
-            </div>
-          </div>
-        </li>
-        <li class="comment" id="backgroundID">
-          <div class="comment-header">
-            <div>Варвара Н.</div>
-            <div>13.02.22 19:22</div>
-          </div>
-          <div class="comment-body">
-            <div class="comment-text">
-              Мне нравится как оформлена эта страница! ❤
-            </div>
-          </div>
-          <div class="comment-footer">
-            <div class="likes">
-              <span class="likes-counter">75</span>
-              <button class="like-button -active-like" id="buttonAddLike"></button>
-            </div>
-          </div>
-        </li>
+        <!-- Все рендерится из JS -->
       </ul>
       <div class="add-form">
         <input
@@ -71,24 +38,73 @@
     const forTextArea = document.getElementById('textTextarea');
     const listAdd = document.getElementById('listAdd');
 
-    const forLikeButton = document.getElementById('buttonAddLike');
-
+    // Тот самый рендер для HTML кода:
     const commentators = [
       {
-        name: 'Глеб Фокин'
+        name: 'Глеб Фокин',
+        date: '12.02.22 12:18',
+        comment: 'Это будет первый комментарий на этой странице',
+        likes: '3'
+      },
+
+      {
+        name: 'Варвара Н.',
+        date: '13.02.22 19:22',
+        comment: 'Мне нравится как оформлена эта страница! ❤',
+        likes: '75'
       }
-    ]
+    ];
     
+    const renderCommentators = () => {
+      const commentatorsHTML = commentators.map((commentator, index) => {
+        return `<li class="comment" id="backgroundID">
+          <div class="comment-header">
+            <div>${commentator.name}</div>
+            <div>${commentator.date}</div>
+          </div>
+          <div class="comment-body">
+            <div class="comment-text">
+              ${commentator.comment}
+            </div>
+          </div>
+          <div class="comment-footer">
+            <div class="likes">
+              <span class="likes-counter">${commentator.likes}</span>
+              <button class="like-button" data-index='${index}'></button>
+            </div>
+          </div>
+        </li>`;
+      }).join('')
+
+      listAdd.innerHTML = commentatorsHTML;
+    };
+
+    renderCommentators();
+
+    const initEventListeners = () => {
+      const likeElements = document.querySelectorAll('.like-button');
+      const isLike = document.querySelectorAll('-active-like');
+
+      for (const likeElement of likeElements) {
+        likeElement.addEventListener('click', () => {
+          console.log(1);
+        })
+      };
+    };
+
+    initEventListeners();
+
     function getFullDateForComment() {
       const now = new Date();
       
-      const yearValue = now.getFullYear();
+      const yearValue = now.getFullYear().toString().slice(-2);
       const monthValue = now.getMonth() + 1;
       const dayValue = now.getDate();
       const hoursValue = now.getHours();
       const minutesValue = now.getMinutes();
 
-      return dayValue + '.' + monthValue + '.' + yearValue.toString().slice(-2) + ' ' + hoursValue + ':' + minutesValue;
+      // return dayValue + '.' + monthValue + '.' + yearValue.toString().slice(-2) + ' ' + hoursValue + ':' + minutesValue;
+      return `${dayValue}.${monthValue}.${yearValue} ${hoursValue}:${minutesValue}`
     }
 
     forButtonAddForm.addEventListener('click', () => {
@@ -105,26 +121,15 @@
         return;
       }
 
-      const newMessage = 
-      `<li class="comment" id="backgroundID">
-          <div class="comment-header">
-            <div>${nameValue}</div>
-            <div>${getFullDateForComment()}</div>
-          </div>
-          <div class="comment-body">
-            <div class="comment-text">
-              ${textareaValue}
-            </div>
-          </div>
-          <div class="comment-footer">
-            <div class="likes">
-              <span class="likes-counter">0</span>
-              <button class="like-button"></button>
-            </div>
-          </div>
-        </li>`;
+      commentators.push({
+        name: nameValue,
+        date: getFullDateForComment(),
+        comment: textareaValue,
+        likes: '0'
+      });
 
-      listAdd.innerHTML = oldMessages + newMessage;
+      renderCommentators();
+      initEventListeners();
     })
   </script>
 </html>
