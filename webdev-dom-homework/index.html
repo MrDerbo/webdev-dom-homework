@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Проект "Комменты"</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <ul class="comments" id="listAdd">
+        <!-- Все рендерится из JS -->
+      </ul>
+      <div class="add-form">
+        <input
+          type="text"
+          class="add-form-name"
+          placeholder="Введите ваше имя"
+          id="nameInput"
+        />
+        <textarea
+          type="textarea"
+          class="add-form-text"
+          placeholder="Введите ваш коментарий"
+          rows="4"
+          id="textTextarea"
+        ></textarea>
+        <div class="add-form-row">
+          <button class="add-form-button" id="buttonAddForm">Написать</button>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    const forButtonAddForm = document.getElementById('buttonAddForm');
+    const forNameInput = document.getElementById('nameInput');
+    const forTextArea = document.getElementById('textTextarea');
+    const listAdd = document.getElementById('listAdd');
+
+    // Тот самый рендер для HTML кода:
+    const commentators = [
+      {
+        name: 'Глеб Фокин',
+        date: '12.02.22 12:18',
+        comment: 'Это будет первый комментарий на этой странице',
+        likes: '3'
+      },
+
+      {
+        name: 'Варвара Н.',
+        date: '13.02.22 19:22',
+        comment: 'Мне нравится как оформлена эта страница! ❤',
+        likes: '75'
+      }
+    ];
+    
+    const renderCommentators = () => {
+      const commentatorsHTML = commentators.map((commentator, index) => {
+        return `<li class="comment" id="backgroundID">
+          <div class="comment-header">
+            <div>${commentator.name}</div>
+            <div>${commentator.date}</div>
+          </div>
+          <div class="comment-body">
+            <div class="comment-text">
+              ${commentator.comment}
+            </div>
+          </div>
+          <div class="comment-footer">
+            <div class="likes">
+              <span class="likes-counter">${commentator.likes}</span>
+              <button class="like-button" data-index='${index}'></button>
+            </div>
+          </div>
+        </li>`;
+      }).join('')
+
+      listAdd.innerHTML = commentatorsHTML;
+    };
+
+    renderCommentators();
+
+    const initEventListeners = () => {
+      const likeElements = document.querySelectorAll('.like-button');
+      const isLike = document.querySelectorAll('-active-like');
+
+      for (const likeElement of likeElements) {
+        likeElement.addEventListener('click', () => {
+          console.log(1);
+        })
+      };
+    };
+
+    initEventListeners();
+
+    function getFullDateForComment() {
+      const now = new Date();
+      
+      const yearValue = now.getFullYear().toString().slice(-2);
+      const monthValue = now.getMonth() + 1;
+      const dayValue = now.getDate();
+      const hoursValue = now.getHours();
+      const minutesValue = now.getMinutes();
+
+      // return dayValue + '.' + monthValue + '.' + yearValue.toString().slice(-2) + ' ' + hoursValue + ':' + minutesValue;
+      return `${dayValue}.${monthValue}.${yearValue} ${hoursValue}:${minutesValue}`
+    }
+
+    forButtonAddForm.addEventListener('click', () => {
+      const oldMessages = listAdd.innerHTML;
+      const nameValue = forNameInput.value;
+      const textareaValue = forTextArea.value;
+
+      forNameInput.classList.remove('error');
+      forTextArea.classList.remove('error');
+
+      if (nameValue === '' || textareaValue === '') {
+        forNameInput.classList.add('error');
+        forTextArea.classList.add('error');
+        return;
+      }
+
+      commentators.push({
+        name: nameValue,
+        date: getFullDateForComment(),
+        comment: textareaValue,
+        likes: '0'
+      });
+
+      renderCommentators();
+      initEventListeners();
+    })
+  </script>
+</html>
