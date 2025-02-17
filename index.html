@@ -33,102 +33,144 @@
   </body>
 
   <script>
-    const forButtonAddForm = document.getElementById('buttonAddForm');
-    const forNameInput = document.getElementById('nameInput');
-    const forTextArea = document.getElementById('textTextarea');
-    const listAdd = document.getElementById('listAdd');
+const forButtonAddForm = document.getElementById('buttonAddForm');
+const forNameInput = document.getElementById('nameInput');
+const forTextArea = document.getElementById('textTextarea');
+const listAdd = document.getElementById('listAdd');
 
-    // Тот самый рендер для HTML кода:
-    const commentators = [
-      {
-        name: 'Глеб Фокин',
-        date: '12.02.22 12:18',
-        comment: 'Это будет первый комментарий на этой странице',
-        likes: '3'
-      },
+// Массив со значениями для комментариев:
+const commentators = [
+  {
+    name: 'Глеб Фокин',
+    date: '12.02.22 12:18',
+    comment: 'Это будет первый комментарий на этой странице',
+    likes: '3',
+    isLiked: false
+  },
 
-      {
-        name: 'Варвара Н.',
-        date: '13.02.22 19:22',
-        comment: 'Мне нравится как оформлена эта страница! ❤',
-        likes: '75'
-      }
-    ];
-    
-    const renderCommentators = () => {
-      const commentatorsHTML = commentators.map((commentator, index) => {
-        return `<li class="comment" id="backgroundID">
-          <div class="comment-header">
-            <div>${commentator.name}</div>
-            <div>${commentator.date}</div>
-          </div>
-          <div class="comment-body">
-            <div class="comment-text">
-              ${commentator.comment}
-            </div>
-          </div>
-          <div class="comment-footer">
-            <div class="likes">
-              <span class="likes-counter">${commentator.likes}</span>
-              <button class="like-button" data-index='${index}'></button>
-            </div>
-          </div>
-        </li>`;
-      }).join('')
+  {
+    name: 'Варвара Н.',
+    date: '13.02.22 19:22',
+    comment: 'Мне нравится как оформлена эта страница! ❤',
+    likes: '75',
+    isLiked: false
+  }
+];
 
-      listAdd.innerHTML = commentatorsHTML;
-    };
+// Рендеринг комментариев:
+const renderCommentators = () => {
+  const commentatorsHTML = commentators.map((commentator, index) => {
+    return `<li class="comment" id="backgroundID">
+      <div class="comment-header">
+        <div>${commentator.name}</div>
+        <div>${commentator.date}</div>
+      </div>
+      <div class="comment-body">
+        <div class="comment-text">
+          ${commentator.comment}
+        </div>
+      </div>
+      <div class="comment-footer">
+        <div class="likes">
+          <span class="likes-counter">${commentator.likes}</span>
+          <button class="like-button" data-index='${index}' ${commentator.isLiked ? '-active-like' : ''}></button>
+        </div>
+      </div>
+    </li>`;
+  }).join('')
 
-    renderCommentators();
+  listAdd.innerHTML = commentatorsHTML;
+};
 
-    const initEventListeners = () => { // часть с лайком
-      const likeElements = document.querySelectorAll('.like-button');
-      const isLike = document.querySelectorAll('-active-like');
-
-      for (const likeElement of likeElements) {
-        likeElement.addEventListener('click', () => {
-          console.log(1);
-        })
-      };
-    };
-
-    initEventListeners();
-
-    function getFullDateForComment() {
-      const now = new Date();
-      
-      const yearValue = now.getFullYear().toString().slice(-2);
-      const monthValue = now.getMonth() + 1;
-      const dayValue = now.getDate();
-      const hoursValue = now.getHours();
-      const minutesValue = now.getMinutes();
-
-      return `${dayValue}.${monthValue}.${yearValue} ${hoursValue}:${minutesValue}`
+// Функции для работы лайка (смотреть всё до функции с Датой):
+const saveLikesState = () => {
+  commentators.forEach((commentator, index) => {
+    const likeButton = document.querySelector(`.like-button[data-index='${index}']`);
+    if (likeButton) {
+      commentator.isLiked = likeButton.classList.contains('-active-like');
     }
+  });
+};
 
-    forButtonAddForm.addEventListener('click', () => {
-      const oldMessages = listAdd.innerHTML;
-      const nameValue = forNameInput.value;
-      const textareaValue = forTextArea.value;
+const restoreLikesState = () => {
+  commentators.forEach((commentator, index) => {
+    const likeButton = document.querySelector(`.like-button[data-index='${index}']`);
+    if (likeButton && commentator.isLiked) {
+      likeButton.classList.add('-active-like');
+    }
+  });
+};
 
-      forNameInput.classList.remove('error');
-      forTextArea.classList.remove('error');
+const handleLikeClick = function() {
+  const index = this.getAttribute('data-index');
+  const commentator = commentators[index];
+  const likesCounter = this.parentElement.querySelector('.likes-counter');
+  
+  if (commentator.isLiked) {
+    commentator.likes = (parseInt(commentator.likes) - 1).toString();
+    commentator.isLiked = false;
+    this.classList.remove('-active-like');
+  } else {
+    commentator.likes = (parseInt(commentator.likes) + 1).toString();
+    commentator.isLiked = true;
+    this.classList.add('-active-like');
+  }
+  
+  likesCounter.textContent = commentator.likes;
+};
 
-      if (nameValue === '' || textareaValue === '') {
-        forNameInput.classList.add('error');
-        forTextArea.classList.add('error');
-        return;
-      }
+const initEventListeners = () => {
+  const likeButtons = document.querySelectorAll('.like-button');
+  likeButtons.forEach(button => {
+    button.addEventListener('click', handleLikeClick);
+  });
+};
 
-      commentators.push({
-        name: nameValue,
-        date: getFullDateForComment(),
-        comment: textareaValue,
-        likes: '0'
-      });
+renderCommentators();
+initEventListeners();
 
-      renderCommentators();
-      initEventListeners();
-    })
+// Функция для нахождения даты:
+function getFullDateForComment() {
+  const now = new Date();
+  
+  const yearValue = now.getFullYear().toString().slice(-2); // Год в формате YY
+  const monthValue = String(now.getMonth() + 1).padStart(2, '0'); // Месяц с ведущим нулём
+  const dayValue = String(now.getDate()).padStart(2, '0'); // День с ведущим нулём
+  const hoursValue = String(now.getHours()).padStart(2, '0'); // Часы с ведущим нулём
+  const minutesValue = String(now.getMinutes()).padStart(2, '0'); // Минуты с ведущим нулём
+
+  return `${dayValue}.${monthValue}.${yearValue} ${hoursValue}:${minutesValue}`;
+}
+
+// Функция для добавления комментария на страницу, по нажатию на кнопку "Добавить":
+forButtonAddForm.addEventListener('click', () => {
+  const nameValue = forNameInput.value;
+  const textareaValue = forTextArea.value;
+
+  forNameInput.classList.remove('error');
+  forTextArea.classList.remove('error');
+
+  if (nameValue === '' || textareaValue === '') {
+    forNameInput.classList.add('error');
+    forTextArea.classList.add('error');
+    return;
+  }
+
+  // Перед тем, как запушить, делаем проверку и сохраняем значение лайка
+  saveLikesState();
+
+  // Пушим в массив комментариев новые значения комментария:
+  commentators.push({
+    name: nameValue,
+    date: getFullDateForComment(),
+    comment: textareaValue,
+    likes: '0',
+    isLiked: false
+  });
+
+  renderCommentators(); // Рендерим комменты
+  restoreLikesState(); // Восстанавливаем состояние лайков
+  initEventListeners(); // Инициализируем обработчики событий для новых кнопок лайков
+});
   </script>
 </html>
