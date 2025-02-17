@@ -142,6 +142,26 @@ function getFullDateForComment() {
   return `${dayValue}.${monthValue}.${yearValue} ${hoursValue}:${minutesValue}`;
 }
 
+// Функция ответа на комментарий после нажатия на текст комментария:
+const answerToCommentByClick = () => {
+  const clickedComments = document.querySelectorAll('.comment-text');
+
+  for (const clickedComment of clickedComments) {
+    clickedComment.addEventListener('click', () => {
+      // Находим родительский элемент комментария (li)
+      const commentElement = clickedComment.closest('.comment');
+      
+      // Получаем имя автора и текст комментария
+      const authorName = commentElement.querySelector('.comment-header div').textContent;
+      const commentText = clickedComment.textContent;
+
+      return forTextArea.value =`> ${commentText}\n${authorName}, `;
+    });
+  }
+};
+
+answerToCommentByClick();
+
 // Функция для добавления комментария на страницу, по нажатию на кнопку "Добавить":
 forButtonAddForm.addEventListener('click', () => {
   const nameValue = forNameInput.value;
@@ -150,8 +170,12 @@ forButtonAddForm.addEventListener('click', () => {
   forNameInput.classList.remove('error');
   forTextArea.classList.remove('error');
 
-  if (nameValue === '' || textareaValue === '') {
+  if (nameValue === '') {
     forNameInput.classList.add('error');
+    return;
+  }
+
+  if (textareaValue === '') {
     forTextArea.classList.add('error');
     return;
   }
@@ -163,7 +187,7 @@ forButtonAddForm.addEventListener('click', () => {
   commentators.push({
     name: nameValue,
     date: getFullDateForComment(),
-    comment: textareaValue,
+    comment: textareaValue.replaceAll('<', '&lt;').replaceAll('>', '&gt;'),
     likes: '0',
     isLiked: false
   });
@@ -171,6 +195,7 @@ forButtonAddForm.addEventListener('click', () => {
   renderCommentators(); // Рендерим комменты
   restoreLikesState(); // Восстанавливаем состояние лайков
   initEventListeners(); // Инициализируем обработчики событий для новых кнопок лайков
+  answerToCommentByClick();
 });
   </script>
 </html>
