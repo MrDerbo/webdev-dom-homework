@@ -39,63 +39,68 @@ const forTextArea = document.getElementById('textTextarea');
 const listAdd = document.getElementById('listAdd');
 
 // Массив со значениями для комментариев:
-const commentators = [
-  {
-    name: 'Глеб Фокин',
-    date: '12.02.22 12:18',
-    comment: 'Это будет первый комментарий на этой странице',
-    likes: '3',
-    isLiked: false
-  },
+let comments = []; // Массив для хранения комментариев с сервера
 
-  {
-    name: 'Варвара Н.',
-    date: '13.02.22 19:22',
-    comment: 'Мне нравится как оформлена эта страница! ❤',
-    likes: '75',
-    isLiked: false
-  }
-];
+const fetchComments = () => {
+  return fetch('https://wedev-api.sky.pro/api/v1/gleb-fokin/comments', {
+    method: "GET",
+  })
+    .then((response) => response.json())
+    .then((responseData) => {
+      return responseData.comments.map((comment) => ({
+        name: comment.author.name,
+        date: new Date(comment.date),
+        text: comment.text,
+        likes: comment.likes,
+        isLiked: false,
+      }));
+    });
+};
+
+fetchComments().then((appComments) => {
+  comments = appComments;
+  renderCommentators();
+});
 
 // Рендеринг комментариев:
 const renderCommentators = () => {
-  const commentatorsHTML = commentators.map((commentator, index) => {
+  const commentatorsHTML = comments.map((comment, index) => {
     return `<li class="comment" id="backgroundID">
       <div class="comment-header">
-        <div>${commentator.name}</div>
-        <div>${commentator.date}</div>
+        <div>${comment.name}</div>
+        <div>${comment.date.toLocaleString()}</div> <!-- Форматируем дату -->
       </div>
       <div class="comment-body">
         <div class="comment-text">
-          ${commentator.comment}
+          ${comment.text}
         </div>
       </div>
       <div class="comment-footer">
         <div class="likes">
-          <span class="likes-counter">${commentator.likes}</span>
-          <button class="like-button" data-index='${index}' ${commentator.isLiked ? '-active-like' : ''}></button>
+          <span class="likes-counter">${comment.likes}</span>
+          <button class="like-button" data-index='${index}' ${comment.isLiked ? '-active-like' : ''}></button>
         </div>
       </div>
     </li>`;
-  }).join('')
+  }).join('');
 
   listAdd.innerHTML = commentatorsHTML;
 };
 
 // Функции для работы лайка (смотреть всё до функции с Датой):
 const saveLikesState = () => {
-  commentators.forEach((commentator, index) => {
+  comments.forEach((comment, index) => {
     const likeButton = document.querySelector(`.like-button[data-index='${index}']`);
     if (likeButton) {
-      commentator.isLiked = likeButton.classList.contains('-active-like');
+      comment.isLiked = likeButton.classList.contains('-active-like');
     }
   });
 };
 
 const restoreLikesState = () => {
-  commentators.forEach((commentator, index) => {
+  comments.forEach((comment, index) => {
     const likeButton = document.querySelector(`.like-button[data-index='${index}']`);
-    if (likeButton && commentator.isLiked) {
+    if (likeButton && comment.isLiked) {
       likeButton.classList.add('-active-like');
     }
   });
@@ -103,20 +108,20 @@ const restoreLikesState = () => {
 
 const handleLikeClick = function() {
   const index = this.getAttribute('data-index');
-  const commentator = commentators[index];
+  const comment = comments[index];
   const likesCounter = this.parentElement.querySelector('.likes-counter');
   
-  if (commentator.isLiked) {
-    commentator.likes = (parseInt(commentator.likes) - 1).toString();
-    commentator.isLiked = false;
+  if (comment.isLiked) {
+    comment.likes = (parseInt(comment.likes) - 1).toString();
+    comment.isLiked = false;
     this.classList.remove('-active-like');
   } else {
-    commentator.likes = (parseInt(commentator.likes) + 1).toString();
-    commentator.isLiked = true;
+    comment.likes = (parseInt(comment.likes) + 1).toString();
+    comment.isLiked = true;
     this.classList.add('-active-like');
   }
   
-  likesCounter.textContent = commentator.likes;
+  likesCounter.textContent = comment.likes;
 };
 
 const initEventListeners = () => {
@@ -180,22 +185,40 @@ forButtonAddForm.addEventListener('click', () => {
     return;
   }
 
-  // Перед тем, как запушить, делаем проверку и сохраняем значение лайка
-  saveLikesState();
-
-  // Пушим в массив комментариев новые значения комментария:
-  commentators.push({
+  // Создаем новый комментарий
+  const newComment = {
     name: nameValue,
-    date: getFullDateForComment(),
-    comment: textareaValue.replaceAll('<', '&lt;').replaceAll('>', '&gt;'),
+    date: new Date(), // Текущая дата
+    text: textareaValue.replaceAll('<', '&lt;').replaceAll('>', '&gt;'),
     likes: '0',
-    isLiked: false
-  });
+    isLiked: false,
+  };
 
-  renderCommentators(); // Рендерим комменты
-  restoreLikesState(); // Восстанавливаем состояние лайков
-  initEventListeners(); // Инициализируем обработчики событий для новых кнопок лайков
-  answerToCommentByClick();
+  // Отправляем новый комментарий на сервер
+  fetch('https://wedev-api.sky.pro/api/v1/gleb-fokin/comments', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: nameValue,
+      text: textareaValue,
+    }),
+  })
+    .then((response) => response.json())
+    .then((responseData) => {
+      // После успешной отправки обновляем массив comments
+      comments = responseData.comments.map((comment) => ({
+        name: comment.author.name,
+        date: new Date(comment.date),
+        text: comment.text,
+        likes: comment.likes,
+        isLiked: false,
+      }));
+      renderCommentators(); // Рендерим обновленный список
+      forNameInput.value = ''; // Очищаем поле ввода имени
+      forTextArea.value = ''; // Очищаем поле ввода комментария
+    })
+    .catch((error) => {
+      console.error('Ошибка:', error);
+    });
 });
   </script>
 </html>
