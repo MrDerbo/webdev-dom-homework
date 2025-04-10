@@ -38,29 +38,43 @@ const forNameInput = document.getElementById('nameInput');
 const forTextArea = document.getElementById('textTextarea');
 const listAdd = document.getElementById('listAdd');
 
+// метод GET
+const getComments = () => {
+      const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/gleb-fokin/comments", {
+
+       method: "GET"
+
+      });
+
+      fetchPromise.then((response) => {
+
+       const jsonPromise = response.json();
+
+        jsonPromise.then((responseData) => {
+        
+          const appComments = responseData.comments.map((comment) => {
+
+            return {
+              name : comment.author.name,
+              date: getFullDateForComment(),
+              // date : new Date(comment.date).toLocaleDateString('ru-RU', { year: '2-digit', month: '2-digit', day: '2-digit' }) + ' ' + new Date(comment.date).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+              text : comment.text,
+              likes : comment.likes,
+              isLiked: false,
+            };
+          });
+      
+          comments= appComments;
+          renderCommentators();
+        });
+      });
+    };
+    getComments();
+
+
 // Массив со значениями для комментариев:
 let comments = []; // Массив для хранения комментариев с сервера
 
-const fetchComments = () => {
-  return fetch('https://wedev-api.sky.pro/api/v1/gleb-fokin/comments', {
-    method: "GET",
-  })
-    .then((response) => response.json())
-    .then((responseData) => {
-      return responseData.comments.map((comment) => ({
-        name: comment.author.name,
-        date: new Date(comment.date),
-        text: comment.text,
-        likes: comment.likes,
-        isLiked: false,
-      }));
-    });
-};
-
-fetchComments().then((appComments) => {
-  comments = appComments;
-  renderCommentators();
-});
 
 // Рендеринг комментариев:
 const renderCommentators = () => {
@@ -110,7 +124,7 @@ const handleLikeClick = function() {
   const index = this.getAttribute('data-index');
   const comment = comments[index];
   const likesCounter = this.parentElement.querySelector('.likes-counter');
-  
+
   if (comment.isLiked) {
     comment.likes = (parseInt(comment.likes) - 1).toString();
     comment.isLiked = false;
@@ -120,7 +134,7 @@ const handleLikeClick = function() {
     comment.isLiked = true;
     this.classList.add('-active-like');
   }
-  
+
   likesCounter.textContent = comment.likes;
 };
 
@@ -137,8 +151,8 @@ initEventListeners();
 // Функция для нахождения даты:
 function getFullDateForComment() {
   const now = new Date();
-  
-  const yearValue = now.getFullYear().toString().slice(-2); // Год в формате YY
+
+  const yearValue = now.getFullYear().toString(); // Год в формате YY
   const monthValue = String(now.getMonth() + 1).padStart(2, '0'); // Месяц с ведущим нулём
   const dayValue = String(now.getDate()).padStart(2, '0'); // День с ведущим нулём
   const hoursValue = String(now.getHours()).padStart(2, '0'); // Часы с ведущим нулём
@@ -155,7 +169,7 @@ const answerToCommentByClick = () => {
     clickedComment.addEventListener('click', () => {
       // Находим родительский элемент комментария (li)
       const commentElement = clickedComment.closest('.comment');
-      
+
       // Получаем имя автора и текст комментария
       const authorName = commentElement.querySelector('.comment-header div').textContent;
       const commentText = clickedComment.textContent;
@@ -185,40 +199,23 @@ forButtonAddForm.addEventListener('click', () => {
     return;
   }
 
-  // Создаем новый комментарий
-  const newComment = {
-    name: nameValue,
-    date: new Date(), // Текущая дата
-    text: textareaValue.replaceAll('<', '&lt;').replaceAll('>', '&gt;'),
-    likes: '0',
-    isLiked: false,
-  };
-
-  // Отправляем новый комментарий на сервер
-  fetch('https://wedev-api.sky.pro/api/v1/gleb-fokin/comments', {
-    method: 'POST',
-    body: JSON.stringify({
-      name: nameValue,
-      text: textareaValue,
-    }),
-  })
-    .then((response) => response.json())
-    .then((responseData) => {
-      // После успешной отправки обновляем массив comments
-      comments = responseData.comments.map((comment) => ({
-        name: comment.author.name,
-        date: new Date(comment.date),
-        text: comment.text,
-        likes: comment.likes,
-        isLiked: false,
-      }));
-      renderCommentators(); // Рендерим обновленный список
-      forNameInput.value = ''; // Очищаем поле ввода имени
-      forTextArea.value = ''; // Очищаем поле ввода комментария
-    })
-    .catch((error) => {
-      console.error('Ошибка:', error);
+  fetch("https://wedev-api.sky.pro/api/v1/gleb-fokin/comments", {
+        method: "POST",
+        body: JSON.stringify ({
+          name: nameValue,
+          text: forTextArea.value,
+        }),
+      }).then((response) => {
+        response.json().then((responseData) => {
+          getComments();
+          renderCommentators();
+        });
+      });
+      forNameInput.value = "";
+      forTextArea.value = "";
     });
-});
-  </script>
+    renderCommentators();
+
+
+</script>
 </html>
