@@ -8,10 +8,13 @@
 
   <body>
     <div class="container">
+      <div id="preloader" style="display: none;"> <!-- Изначально скрытый -->
+        Подождите, комментарии загружаются...
+      </div>
       <ul class="comments" id="listAdd">
         <!-- Все рендерится из JS -->
       </ul>
-      <div class="add-form">
+      <div class="add-form" id="bottomAddForm">
         <input
           type="text"
           class="add-form-name"
@@ -37,39 +40,56 @@ const forButtonAddForm = document.getElementById('buttonAddForm');
 const forNameInput = document.getElementById('nameInput');
 const forTextArea = document.getElementById('textTextarea');
 const listAdd = document.getElementById('listAdd');
+const bottomAddForm = document.getElementById('bottomAddForm')
+const preloader = document.getElementById('preloader'); 
+// Проверяем наличие записи в sessionStorage 
+if (!sessionStorage.getItem('loaded')) { 
+  // Если запись отсутствует, значит это первая загрузка или перезагрузка страницы 
+  console.log('Это первая загрузка или перезагрузка страницы.'); 
+  preloader.style.display = ''; // Показываем прелоадер 
+  } else { console.log('Страница уже была загружена в этой сессии.'); 
+preloader.style.display = 'none'; // Сразу скрываем прелоадер 
+}
 
+
+if (!sessionStorage.getItem('loaded')) {
+  // Если нет — показываем прелоадер
+  preloader.style.display = '';
+}
 // метод GET
 const getComments = () => {
-      const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/gleb-fokin/comments", {
+    if (!sessionStorage.getItem('loaded')) {
+    // Если нет — показываем прелоадер
+    preloader.style.display = '';
+  }
 
+      const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/kamilkar/comments", {
        method: "GET"
-
       });
-
+      
       fetchPromise.then((response) => {
-
        const jsonPromise = response.json();
-
         jsonPromise.then((responseData) => {
-        
           const appComments = responseData.comments.map((comment) => {
-
             return {
               name : comment.author.name,
-              date: getFullDateForComment(),
-              // date : new Date(comment.date).toLocaleDateString('ru-RU', { year: '2-digit', month: '2-digit', day: '2-digit' }) + ' ' + new Date(comment.date).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+              date : new Date(comment.date).toLocaleDateString('ru-RU', { year: '2-digit', month: '2-digit', day: '2-digit' }) + ' ' + new Date(comment.date).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
               text : comment.text,
               likes : comment.likes,
               isLiked: false,
             };
           });
-      
-          comments= appComments;
+          comments = appComments;
           renderCommentators();
+              // Скрываем прелоадер и сохраняем состояние в sessionStorage
+          preloader.style.display = 'none';
+          sessionStorage.setItem('loaded', 'true');
         });
       });
     };
     getComments();
+  
+
 
 
 // Массив со значениями для комментариев:
@@ -148,38 +168,36 @@ const initEventListeners = () => {
 renderCommentators();
 initEventListeners();
 
-// Функция для нахождения даты:
-function getFullDateForComment() {
-  const now = new Date();
+// // Функция для нахождения даты:
+// function getFullDateForComment() {
+//   const now = new Date();
 
-  const yearValue = now.getFullYear().toString(); // Год в формате YY
-  const monthValue = String(now.getMonth() + 1).padStart(2, '0'); // Месяц с ведущим нулём
-  const dayValue = String(now.getDate()).padStart(2, '0'); // День с ведущим нулём
-  const hoursValue = String(now.getHours()).padStart(2, '0'); // Часы с ведущим нулём
-  const minutesValue = String(now.getMinutes()).padStart(2, '0'); // Минуты с ведущим нулём
+//   const yearValue = now.getFullYear().toString(); // Год в формате YYYY
+//   const monthValue = String(now.getMonth() + 1).padStart(2, '0'); // Месяц с ведущим нулём
+//   const dayValue = String(now.getDate()).padStart(2, '0'); // День с ведущим нулём
+//   const hoursValue = String(now.getHours()).padStart(2, '0'); // Часы с ведущим нулём
+//   const minutesValue = String(now.getMinutes()).padStart(2, '0'); // Минуты с ведущим нулём
 
-  return `${dayValue}.${monthValue}.${yearValue} ${hoursValue}:${minutesValue}`;
-}
+//   return `${dayValue}.${monthValue}.${yearValue} ${hoursValue}:${minutesValue}`;
 
-// Функция ответа на комментарий после нажатия на текст комментария:
-const answerToCommentByClick = () => {
-  const clickedComments = document.querySelectorAll('.comment-text');
+// // Функция ответа на комментарий после нажатия на текст комментария:
+// const answerToCommentByClick = () => {
+//   const clickedComments = document.querySelectorAll('.comment-text');
 
-  for (const clickedComment of clickedComments) {
-    clickedComment.addEventListener('click', () => {
-      // Находим родительский элемент комментария (li)
-      const commentElement = clickedComment.closest('.comment');
+//   for (const clickedComment of clickedComments) {
+//     clickedComment.addEventListener('click', () => {
+//       // Находим родительский элемент комментария (li)
+//       const commentElement = clickedComment.closest('.comment');
 
-      // Получаем имя автора и текст комментария
-      const authorName = commentElement.querySelector('.comment-header div').textContent;
-      const commentText = clickedComment.textContent;
+//       // Получаем имя автора и текст комментария
+//       const authorName = commentElement.querySelector('.comment-header div').textContent;
+//       const commentText = clickedComment.textContent;
 
-      return forTextArea.value =`> ${commentText}\n${authorName}, `;
-    });
-  }
-};
+//       return forTextArea.value =`> ${commentText}\n${authorName}, `;
+//     });
+//   }
+// };
 
-answerToCommentByClick();
 
 // Функция для добавления комментария на страницу, по нажатию на кнопку "Добавить":
 forButtonAddForm.addEventListener('click', () => {
@@ -198,24 +216,41 @@ forButtonAddForm.addEventListener('click', () => {
     forTextArea.classList.add('error');
     return;
   }
+  
+  // Скрываем форму и добавляем сообщение о загрузке 
+  bottomAddForm.style.display = "none"; // Убираем форму
+  
+  // Статус для момента, после отправки нового комментария
+  const statusElement = document.createElement('div'); // Создаем блок
+  statusElement.className = 'status-message visible' // Классы для CSS
+  statusElement.textContent = 'Комментарий добавляется...';
+  statusElement.id = 'temp-status';
+  listAdd.appendChild(statusElement); // Добавляем в конец
 
-  fetch("https://wedev-api.sky.pro/api/v1/gleb-fokin/comments", {
-        method: "POST",
-        body: JSON.stringify ({
-          name: nameValue,
-          text: forTextArea.value,
-        }),
-      }).then((response) => {
-        response.json().then((responseData) => {
-          getComments();
-          renderCommentators();
-        });
-      });
-      forNameInput.value = "";
-      forTextArea.value = "";
+  fetch("https://wedev-api.sky.pro/api/v1/kamilkar/comments", {
+    method: "POST",
+    body: JSON.stringify ({
+      name: nameValue,
+      text: forTextArea.value,
+    }),
+  })
+  .then((response) => {
+    return response.json()})
+      
+  .then((responseData) => {
+      getComments();
+      renderCommentators();
+      statusElement.remove();
+      bottomAddForm.style.display = ""; // Возвращаем видимость формы
     });
-    renderCommentators();
 
+    forNameInput.value = "";
+    forTextArea.value = "";
+  });
 
+// Обработчик beforeunload, который нужен, чтобы очистить данные сессии, для проверки прелоадера
+window.onbeforeunload = function() {
+  sessionStorage.clear();
+};
 </script>
 </html>
