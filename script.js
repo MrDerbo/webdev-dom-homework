@@ -1,43 +1,3 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Проект "Комменты"</title>
-    <meta charset="utf-8" />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-
-  <body>
-    <div class="container">
-      <div id="preloader" style="display: none;"> <!-- Изначально скрытый -->
-        Подождите, комментарии загружаются...
-      </div>
-      <ul class="comments" id="listAdd">
-        <!-- Все рендерится из JS -->
-      </ul>
-      <div class="add-form" id="bottomAddForm">
-        <input
-          type="text"
-          class="add-form-name"
-          placeholder="Введите ваше имя"
-          id="nameInput"
-          onclick="clickedNameOrText()"
-        />
-        <textarea
-          type="textarea"
-          class="add-form-text"
-          placeholder="Введите ваш коментарий"
-          rows="4"
-          id="textTextarea"
-          onclick="clickedNameOrText()"
-        ></textarea>
-        <div class="add-form-row">
-          <button class="add-form-button" id="buttonAddForm">Написать</button>
-        </div>
-      </div>
-    </div>
-  </body>
-
-  <script>
 const forButtonAddForm = document.getElementById('buttonAddForm');
 const forNameInput = document.getElementById('nameInput');
 const forTextArea = document.getElementById('textTextarea');
@@ -89,15 +49,6 @@ const getComments = () => {
           bottomAddForm.style.display = '';
           sessionStorage.setItem('loaded', 'true');
         })
-
-        // .catch((error) => {
-        //   console.error('Ошибка', error.message);
-        //   if (error.message === 'Failed to fetch') {
-        //     alert('Пропал интернет, попробуйте позже.')
-        //   } else {
-        //     alert(error.message);
-        //   }
-        // })
       });
     };
     getComments();
@@ -262,48 +213,67 @@ if (textareaValue === '') {
   statusElement.id = 'temp-status';
   listAdd.appendChild(statusElement); // Добавляем в конец
 
-  fetch("https://wedev-api.sky.pro/api/v1/marat_karimov/comments", {
-  method: "POST",
-  body: JSON.stringify({
-    name: nameValue,
-    text: forTextArea.value,
-    forceError: false,
-  }),
-})
-  .then((response) => {
-    if (!response.ok) {
-      if (response.status === 400) {
-        throw new Error('Имя или текст слишком короткие, заполните поля от 3-х символов.');
-      } else if (response.status === 500) {
-        throw new Error('Сервер не ответил, попробуйте позже.');
-      } else {
-        throw new Error('Что-то пошло не так...');
-      }
+function fetchPOST(attempt = 1) {
+    const maxAttempts = 3;
+
+    fetch("https://wedev-api.sky.pro/api/v1/marat_karimov/comments", {
+        method: "POST",
+        body: JSON.stringify({
+            name: nameValue,
+            text: forTextArea.value,
+            forceError: true,
+        }),
+        })
+        .then((response) => {
+            if (!response.ok) {
+                if (response.status >= 500 && attempt < maxAttempts) {
+                    // Если 500+ ошибка и еще есть попытки, делаем повторный запрос
+                    return new Promise(resolve => {
+                        setTimeout(() => {
+                            resolve(fetchPOST(attempt + 1));
+                        }, 1000 * attempt); // Увеличиваем задержку с каждой попыткой
+                    });
+                }
+                // Для ошибок 4xx и 5xx сначала читаем JSON с сообщением об ошибке
+                if (response.status >= 400 && response.status <= 400) {
+                    return response.json().then(errorData => {
+                        // Если сервер вернул сообщение об ошибке, используем его
+                        if (errorData.error) {
+                            throw new Error(errorData.error);
+                        }
+                        // Если нет сообщения от сервера, используем стандартное
+                        throw new Error(`Ошибка сервера: ${response.status}`);
+                    });
+                }
+            }
+            return response.json();
+        })
+        .then(() => {
+            getComments();
+            renderCommentators();
+            statusElement.remove();
+            bottomAddForm.style.display = ''; // Возвращаем видимость формы
+            forNameInput.value = '';         // Очищаем поле имени
+            forTextArea.value = '';          // Очищаем поле текста
+        })
+        .catch((error) => {
+            console.error(`Ошибка: ${error.message}`);
+            if (error.message === 'Failed to fetch') {
+            alert('Пропал интернет, попробуйте позже');
+            } else {
+            alert('Произошла ошибка: ' + error.message);
+            }
+            statusElement.remove();
+            bottomAddForm.style.display = ''; // Возвращаем видимость формы
+        });
     }
-    return response.json();
-  })
-  .then(() => {
-    getComments();
-    renderCommentators();
-    statusElement.remove();
-    bottomAddForm.style.display = ''; // Возвращаем видимость формы
-    forNameInput.value = '';         // Очищаем поле имени
-    forTextArea.value = '';          // Очищаем поле текста
-  })
-  .catch((error) => {
-    console.error(`Ошибка: ${error.message}`);
-    if (error.message === 'Failed to fetch') {
-      alert('Пропал интернет, попробуйте позже');
-    } else {
-      alert('Произошла ошибка: ' + error.message);
-    }
-    statusElement.remove();
-    bottomAddForm.style.display = ''; // Возвращаем видимость формы
-  });
+    fetchPOST();
 })
+
+
+
 // Обработчик beforeunload, который нужен, чтобы очистить данные сессии, для проверки прелоадера
 window.onbeforeunload = function() {
   sessionStorage.clear();
 };
-</script>
-</html>
+

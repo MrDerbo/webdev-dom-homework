@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Проект "Комменты"</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <div id="preloader" style="display: none;"> <!-- Изначально скрытый -->
+        Подождите, комментарии загружаются...
+      </div>
+      <ul class="comments" id="listAdd">
+        <!-- Все рендерится из JS -->
+      </ul>
+      <div class="add-form" id="bottomAddForm">
+        <input
+          type="text"
+          class="add-form-name"
+          placeholder="Введите ваше имя"
+          id="nameInput"
+          onclick="clickedNameOrText()"
+        />
+        <textarea
+          type="textarea"
+          class="add-form-text"
+          placeholder="Введите ваш коментарий"
+          rows="4"
+          id="textTextarea"
+          onclick="clickedNameOrText()"
+        ></textarea>
+        <div class="add-form-row">
+          <button class="add-form-button" id="buttonAddForm">Написать</button>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script src="script.js"></script>
+</html>
