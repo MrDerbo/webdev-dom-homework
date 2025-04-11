@@ -132,9 +132,11 @@ const renderCommentators = () => {
   }).join('');
 
   listAdd.innerHTML = commentatorsHTML;
+
+  initEventListeners();
 };
 
-// Функции для работы лайка (смотреть всё до функции с Датой):
+// Функции для работы лайка
 const saveLikesState = () => {
   comments.forEach((comment, index) => {
     const likeButton = document.querySelector(`.like-button[data-index='${index}']`);
@@ -158,17 +160,36 @@ const handleLikeClick = function() {
   const comment = comments[index];
   const likesCounter = this.parentElement.querySelector('.likes-counter');
 
-  if (comment.isLiked) {
-    comment.likes = (parseInt(comment.likes) - 1).toString();
-    comment.isLiked = false;
-    this.classList.remove('-active-like');
-  } else {
-    comment.likes = (parseInt(comment.likes) + 1).toString();
-    comment.isLiked = true;
-    this.classList.add('-active-like');
-  }
+  // Добавляем класс для анимации вращения
+  this.classList.add('-loading-like');
 
-  likesCounter.textContent = comment.likes;
+  // Функция delay для имитации API запроса
+  function delay(interval = 300) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve();
+        }, interval);
+      });
+    }
+
+  // Имитация задержки API-запроса
+  delay(2000).then(() => {
+    // Удаление класса анимации после завершения "загрузки"
+    this.classList.remove('-loading-like');
+
+    // Логика увеличения/снижения лайков
+    if (comment.isLiked) {
+      comment.likes = (parseInt(comment.likes) - 1).toString();
+      comment.isLiked = false;
+      this.classList.remove('-active-like');
+    } else {
+      comment.likes = (parseInt(comment.likes) + 1).toString();
+      comment.isLiked = true;
+      this.classList.add('-active-like');
+    }
+
+    likesCounter.textContent = comment.likes;
+  });
 };
 
 const initEventListeners = () => {
@@ -181,17 +202,6 @@ const initEventListeners = () => {
 renderCommentators();
 initEventListeners();
 
-// // Функция для нахождения даты:
-// function getFullDateForComment() {
-//   const now = new Date();
-
-//   const yearValue = now.getFullYear().toString(); // Год в формате YYYY
-//   const monthValue = String(now.getMonth() + 1).padStart(2, '0'); // Месяц с ведущим нулём
-//   const dayValue = String(now.getDate()).padStart(2, '0'); // День с ведущим нулём
-//   const hoursValue = String(now.getHours()).padStart(2, '0'); // Часы с ведущим нулём
-//   const minutesValue = String(now.getMinutes()).padStart(2, '0'); // Минуты с ведущим нулём
-
-//   return `${dayValue}.${monthValue}.${yearValue} ${hoursValue}:${minutesValue}`;
 
 // // Функция ответа на комментарий после нажатия на текст комментария:
 // const answerToCommentByClick = () => {
