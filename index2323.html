@@ -20,6 +20,7 @@
           class="add-form-name"
           placeholder="Введите ваше имя"
           id="nameInput"
+          onclick="clickedNameOrText()"
         />
         <textarea
           type="textarea"
@@ -27,6 +28,7 @@
           placeholder="Введите ваш коментарий"
           rows="4"
           id="textTextarea"
+          onclick="clickedNameOrText()"
         ></textarea>
         <div class="add-form-row">
           <button class="add-form-button" id="buttonAddForm">Написать</button>
@@ -61,14 +63,15 @@ const getComments = () => {
     if (!sessionStorage.getItem('loaded')) {
     // Если нет — показываем прелоадер
     preloader.style.display = '';
+    bottomAddForm.style.display = 'none';
   }
 
-      const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/kamilkar/comments", {
+      const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/marat_karimov/comments", {
        method: "GET"
       });
       
       fetchPromise.then((response) => {
-       const jsonPromise = response.json();
+        const jsonPromise = response.json();
         jsonPromise.then((responseData) => {
           const appComments = responseData.comments.map((comment) => {
             return {
@@ -83,8 +86,18 @@ const getComments = () => {
           renderCommentators();
               // Скрываем прелоадер и сохраняем состояние в sessionStorage
           preloader.style.display = 'none';
+          bottomAddForm.style.display = '';
           sessionStorage.setItem('loaded', 'true');
-        });
+        })
+
+        // .catch((error) => {
+        //   console.error('Ошибка', error.message);
+        //   if (error.message === 'Failed to fetch') {
+        //     alert('Пропал интернет, попробуйте позже.')
+        //   } else {
+        //     alert(error.message);
+        //   }
+        // })
       });
     };
     getComments();
@@ -198,6 +211,12 @@ initEventListeners();
 //   }
 // };
 
+const clickedNameOrText = () => {
+  forNameInput.style.background = '#fff';
+  forTextArea.style.background = '#fff';
+  forNameInput.style.border = 'none';
+  forTextArea.style.border = 'none';
+}
 
 // Функция для добавления комментария на страницу, по нажатию на кнопку "Добавить":
 forButtonAddForm.addEventListener('click', () => {
@@ -207,15 +226,21 @@ forButtonAddForm.addEventListener('click', () => {
   forNameInput.classList.remove('error');
   forTextArea.classList.remove('error');
 
-  if (nameValue === '') {
-    forNameInput.classList.add('error');
-    return;
-  }
+  if (nameValue === '' && textareaValue === '') {
+  forNameInput.classList.add('error');
+  forTextArea.classList.add('error');
+  return;
+}
 
-  if (textareaValue === '') {
-    forTextArea.classList.add('error');
-    return;
-  }
+if (nameValue === '') {
+  forNameInput.classList.add('error');
+  return;
+}
+
+if (textareaValue === '') {
+  forTextArea.classList.add('error');
+  return;
+}
   
   // Скрываем форму и добавляем сообщение о загрузке 
   bottomAddForm.style.display = "none"; // Убираем форму
@@ -227,27 +252,45 @@ forButtonAddForm.addEventListener('click', () => {
   statusElement.id = 'temp-status';
   listAdd.appendChild(statusElement); // Добавляем в конец
 
-  fetch("https://wedev-api.sky.pro/api/v1/kamilkar/comments", {
-    method: "POST",
-    body: JSON.stringify ({
-      name: nameValue,
-      text: forTextArea.value,
-    }),
-  })
+  fetch("https://wedev-api.sky.pro/api/v1/marat_karimov/comments", {
+  method: "POST",
+  body: JSON.stringify({
+    name: nameValue,
+    text: forTextArea.value,
+    forceError: false,
+  }),
+})
   .then((response) => {
-    return response.json()})
-      
-  .then((responseData) => {
-      getComments();
-      renderCommentators();
-      statusElement.remove();
-      bottomAddForm.style.display = ""; // Возвращаем видимость формы
-    });
-
-    forNameInput.value = "";
-    forTextArea.value = "";
+    if (!response.ok) {
+      if (response.status === 400) {
+        throw new Error('Имя или текст слишком короткие, заполните поля от 3-х символов.');
+      } else if (response.status === 500) {
+        throw new Error('Сервер не ответил, попробуйте позже.');
+      } else {
+        throw new Error('Что-то пошло не так...');
+      }
+    }
+    return response.json();
+  })
+  .then(() => {
+    getComments();
+    renderCommentators();
+    statusElement.remove();
+    bottomAddForm.style.display = ''; // Возвращаем видимость формы
+    forNameInput.value = '';         // Очищаем поле имени
+    forTextArea.value = '';          // Очищаем поле текста
+  })
+  .catch((error) => {
+    console.error(`Ошибка: ${error.message}`);
+    if (error.message === 'Failed to fetch') {
+      alert('Пропал интернет, попробуйте позже');
+    } else {
+      alert('Произошла ошибка: ' + error.message);
+    }
+    statusElement.remove();
+    bottomAddForm.style.display = ''; // Возвращаем видимость формы
   });
-
+})
 // Обработчик beforeunload, который нужен, чтобы очистить данные сессии, для проверки прелоадера
 window.onbeforeunload = function() {
   sessionStorage.clear();
